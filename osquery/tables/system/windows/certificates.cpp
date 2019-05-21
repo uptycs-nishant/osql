@@ -19,7 +19,7 @@
 
 #include <osquery/logger.h>
 #include <osquery/tables.h>
-#include <osquery/SQL.h>
+#include <osquery/sql.h>
 
 #include "osquery/core/conversions.h"
 #include "osquery/core/windows/wmi.h"
