@@ -1,4 +1,4 @@
-site_name: osquery
+site_name: osql
 theme: readthedocs
 
 docs_dir: docs/wiki

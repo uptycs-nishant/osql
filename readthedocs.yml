@@ -1,0 +1,12 @@
+version: 2
+
+submodules:
+  include: all
+
+mkdocs:
+  configuration: mkdocs.yml
+  fail_on_warning: false
+
+python:
+  version: 3.6
+
