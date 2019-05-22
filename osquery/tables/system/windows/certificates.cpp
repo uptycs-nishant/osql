@@ -16,6 +16,7 @@
 #include <sddl.h>
 
 #include <boost/algorithm/hex.hpp>
+#include <boost/filesystem.hpp>
 
 #include <osquery/logger.h>
 #include <osquery/tables.h>
@@ -26,6 +27,8 @@
 #include "osquery/core/windows/process_ops.h"
 #include "osquery/filesystem/fileops.h"
 #include "osquery/tables/system/windows/certificates.h"
+
+namespace fs = boost::filesystem;
 
 namespace osquery {
 namespace tables {
@@ -299,30 +302,53 @@ void parseSystemStoreString(LPCWSTR sysStoreW,
   }
 }
 
-/// Enumerate and process a certificate store
-void enumerateCertStore(const HCERTSTORE& certStore,
-                        LPCWSTR sysStoreW,
-                        const std::string& storeLocation,
-                        QueryData& results) {
+#pragma pack(1)
+struct Header {
+  DWORD propid;
+  DWORD unknown;
+  DWORD size;
+};
 
-  std::string storeId, sid, storeName;
-  parseSystemStoreString(sysStoreW, storeLocation, storeId, sid, storeName);
+Status getEncodedCert(std::basic_istream<BYTE>& blob, std::vector<BYTE>& encodedCert) {
+  // See these links for details on this magic number:
+  // https://itsme.home.xs4all.nl/projects/xda/smartphone-certificates.html
+  // https://github.com/wine-mirror/wine/blob/f9301c2b66450a1cdd986e9052fcaa76535ba8b7/dlls/crypt32/crypt32_private.h#L146
+  static const DWORD CERT_CERT_PROP_ID = 0x20;
 
-  std::string username = getUsernameFromSid(sid);
+  Header hdr;
 
-  auto certContext = CertEnumCertificatesInStore(certStore, nullptr);
+  while (true) {
+    blob.read(reinterpret_cast<BYTE*>(&hdr), sizeof(hdr));
+    if (!blob.good()) {
+      return Status::failure("Malformed certificate blob");
+    }
 
-  if (certContext == nullptr && GetLastError() == CRYPT_E_NOT_FOUND) {
-    TLOG << "    Store was empty.";
+    if (hdr.propid != CERT_CERT_PROP_ID) {
+      blob.ignore(hdr.size);
+      if (!blob.good()) {
+        return Status::failure("Malformed certificate blob");
+      }
+      continue;
+    }
+
+    encodedCert.resize(hdr.size);
+    blob.read(encodedCert.data(), hdr.size);
+    if (!blob.good()) {
+      return Status::failure("EOF in certificate blob when reading data");
+    }
+    break;
   }
 
-  if (certContext == nullptr && GetLastError() != CRYPT_E_NOT_FOUND) {
-    VLOG(1) << "Certificate store access failed:  " << storeLocation << "\\"
-            << constructDisplayStoreName(storeId, storeName) << " with " << GetLastError();
-    return;
-  }
+  return Status::success();
+}
 
-  while (certContext != nullptr) {
+void addCertRow(PCCERT_CONTEXT certContext, QueryData& results,
+    std::string storeId,
+    std::string sid,
+    std::string storeName,
+    std::string username,
+    std::string storeLocation
+    ) {
     // Get the cert fingerprint and ensure we haven't already processed it
     std::vector<char> certBuff;
     getCertCtxProp(certContext, CERT_HASH_PROP_ID, certBuff);
@@ -344,6 +370,7 @@ void enumerateCertStore(const HCERTSTORE& certStore,
                       certBuff.data(),
                       static_cast<unsigned long>(certBuff.size()));
     r["common_name"] = certBuff.data();
+    TLOG << "    cert name: " << certBuff.data();
 
     auto subjSize = CertNameToStr(certContext->dwCertEncodingType,
                                   &(certContext->pCertInfo->Subject),
@@ -459,6 +486,93 @@ void enumerateCertStore(const HCERTSTORE& certStore,
     r["authority_key_id"] = authKeyId;
 
     results.push_back(r);
+
+}
+
+void findPersonalCertsOnDisk(const std::string& username, QueryData& results,
+    std::string storeId,
+    std::string sid,
+    std::string storeName,
+    std::string storeLocation
+    ) {
+  std::stringstream certsPath;
+  certsPath << "C:\\Users\\" << username << "\\AppData\\Roaming\\Microsoft\\SystemCertificates\\My\\Certificates";
+
+  try {
+    for (fs::directory_entry &x : fs::directory_iterator(fs::path(certsPath.str()))) {
+      std::basic_ifstream<BYTE> inp(x.path().string(), std::ios::binary);
+
+      std::vector<BYTE> encodedCert;
+      auto ret = getEncodedCert(inp, encodedCert);
+      if (!ret.ok()) {
+        return;
+      }
+
+      auto ctx = CertCreateCertificateContext(
+        X509_ASN_ENCODING,
+        encodedCert.data(),
+        static_cast<DWORD>(encodedCert.size()));
+
+      addCertRow(ctx, results,
+          storeId, sid, storeName, username, storeLocation
+          );
+
+    }
+  } catch (const fs::filesystem_error& e) {
+    VLOG(1) << "Error traversing " << certsPath.str() << ": " << e.what();
+  }
+}
+
+
+/// Enumerate and process a certificate store
+void enumerateCertStore(const HCERTSTORE& certStore,
+                        LPCWSTR sysStoreW,
+                        const std::string& storeLocation,
+                        QueryData& results) {
+
+  std::string storeId, sid, storeName;
+  parseSystemStoreString(sysStoreW, storeLocation, storeId, sid, storeName);
+
+  std::string username = getUsernameFromSid(sid);
+
+  auto certContext = CertEnumCertificatesInStore(certStore, nullptr);
+
+  if (certContext == nullptr && GetLastError() == CRYPT_E_NOT_FOUND) {
+    TLOG << "    Store was empty.";
+
+    // Personal stores for other users come back as empty, even if they are not.
+    if (storeName == "Personal" ) {
+      // Avoid duplicate rows for personal certs we've already inserted up
+      // front.
+      if (storeLocation != "Users" || boost::ends_with(storeId, "_Classes")) {
+        TLOG << "    Trying harder to get Personal store.";
+
+        // TODO: This can technically be optimized if this table isn't fast
+        // enough, we shouldn't need to call findPersonalCertsOnDisk twice. We
+        // can cache the initial data fetch, and then use that here. Just need
+        // to make sure the rows from the intial fetch have the columns patched
+        // to represent where we are currently in the enumeration. Just the
+        // storeId and storeLocation fields.
+        findPersonalCertsOnDisk(username, results,
+            storeId, sid, storeName, storeLocation
+            );
+      }
+
+    }
+    return;
+  }
+
+  if (certContext == nullptr && GetLastError() != CRYPT_E_NOT_FOUND) {
+    VLOG(1) << "Certificate store access failed:  " << storeLocation << "\\"
+            << constructDisplayStoreName(storeId, storeName) << " with " << GetLastError();
+    return;
+  }
+
+  while (certContext != nullptr) {
+    addCertRow(certContext, results,
+        storeId, sid, storeName, username, storeLocation
+        );
+
     certContext = CertEnumCertificatesInStore(certStore, certContext);
   }
 }
@@ -534,8 +648,23 @@ BOOL WINAPI certEnumSystemStoreLocationsCallback(LPCWSTR storeLocation,
   return TRUE;
 }
 
-QueryData genCerts(QueryContext& context) {
-  QueryData results;
+void getPersonalCerts(QueryData& results) {
+  auto users = SQL::selectAllFrom("users");
+  for (const auto& row : users) {
+    auto sid = row.at("uuid");
+    auto username = row.at("username");
+
+    findPersonalCertsOnDisk(username, results,
+        sid,
+        sid,
+        "Personal", // storeName
+        "Users" //storeLocation
+        );
+  }
+}
+
+void getOtherCerts(QueryData& results) {
+
   ENUM_ARG enumArg;
 
   unsigned long flags = 0;
@@ -555,8 +684,14 @@ QueryData genCerts(QueryContext& context) {
   if (ret != 1) {
     VLOG(1) << "Failed to enumerate system store locations with "
             << GetLastError();
-    return results;
   }
+}
+
+QueryData genCerts(QueryContext& context) {
+  QueryData results;
+
+  getPersonalCerts(results);
+  getOtherCerts(results);
 
   return results;
 }
