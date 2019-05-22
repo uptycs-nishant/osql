@@ -25,6 +25,7 @@
 #include "osquery/core/windows/wmi.h"
 #include "osquery/core/windows/process_ops.h"
 #include "osquery/filesystem/fileops.h"
+#include "osquery/tables/system/windows/certificates.h"
 
 namespace osquery {
 namespace tables {
