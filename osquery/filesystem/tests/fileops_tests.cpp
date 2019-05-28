@@ -600,13 +600,8 @@ TEST_F(FileOpsTests, test_safe_permissions) {
 
     status = fd.hasSafePermissions();
 
-    if (isPlatform(PlatformType::TYPE_WINDOWS)) {
-      EXPECT_FALSE(status.ok());
-      EXPECT_EQ(1, status.getCode());
-    } else {
-      // On POSIX, we only check to see if temp_file has S_IWOTH
-      EXPECT_TRUE(status.ok());
-    }
+    // On Windows a Deny on Everyone has the priority, on Posix we only check S_IWOTH
+    EXPECT_TRUE(status.ok());
 
     if (isPlatform(PlatformType::TYPE_POSIX)) {
       // On POSIX, chmod on a file requires +x on the parent directory
