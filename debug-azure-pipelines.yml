@@ -1,5 +1,5 @@
 trigger:
-- master
+- stefano/debug/fileops-test
 
 jobs:
 
