@@ -598,6 +598,9 @@ TEST_F(FileOpsTests, test_safe_permissions) {
     EXPECT_TRUE(platformChmod(temp_file, S_IRUSR | S_IRGRP | S_IROTH));
     EXPECT_TRUE(platformChmod(root_dir, S_IRUSR | S_IRGRP | S_IWGRP | S_IROTH));
 
+    std::cerr << "FileACL: " << dumpFileACL(temp_file) << std::endl;
+    std::cerr << "DirACL: " << dumpFileACL(root_dir) << std::endl;
+
     status = fd.hasSafePermissions();
 
     // On Windows a Deny on Everyone has the priority, on Posix we only check S_IWOTH

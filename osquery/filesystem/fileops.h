@@ -424,4 +424,6 @@ boost::filesystem::path getSystemRoot();
  * @return osquery::Status
  */
 Status platformLstat(const std::string& path, struct stat& d_stat);
+
+std::string dumpFileACL(const std::string& path);
 }

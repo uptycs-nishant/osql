@@ -1837,4 +1837,108 @@ fs::path getSystemRoot() {
 Status platformLstat(const std::string& path, struct stat& d_stat) {
   return Status(1);
 }
+
+std::string dumpFileACL(const std::string& path) {
+  PACL entry_dacl = nullptr;
+  PSECURITY_DESCRIPTOR entry_sd = nullptr;
+  std::string outputACLSDDL;
+
+  if (GetNamedSecurityInfoA(path.data(),
+                            SE_FILE_OBJECT,
+                            DACL_SECURITY_INFORMATION,
+                            nullptr,
+                            nullptr,
+                            &entry_dacl,
+                            nullptr,
+                            &entry_sd) == ERROR_SUCCESS) {
+    // BOOL ConvertSecurityDescriptorToStringSecurityDescriptorA(
+    //    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    //    DWORD RequestedStringSDRevision,
+    //    SECURITY_INFORMATION SecurityInformation,
+    //    LPSTR * StringSecurityDescriptor,
+    //    PULONG StringSecurityDescriptorLen);
+
+    LPSTR aclSDDLString = nullptr;
+    ULONG aclSDDLStringLength = 0;
+
+    if (ConvertSecurityDescriptorToStringSecurityDescriptorA(
+            entry_sd,
+            SDDL_REVISION_1,
+            DACL_SECURITY_INFORMATION,
+            &aclSDDLString,
+            &aclSDDLStringLength)) {
+      if (aclSDDLStringLength > 0)
+        outputACLSDDL = aclSDDLString;
+
+      outputACLSDDL += "\n\n";
+
+      for (int i = 0; i < entry_dacl->AceCount; ++i) {
+        PVOID void_entry = nullptr;
+        if (!GetAce(entry_dacl, i, &void_entry)) {
+          return std::string();
+        }
+
+        auto ace = static_cast<PACE_HEADER>(void_entry);
+
+        LPSTR sidString = nullptr;
+        PSID sid;
+        if (ace->AceType == ACCESS_ALLOWED_ACE_TYPE) {
+          auto allowed_ace = reinterpret_cast<PACCESS_ALLOWED_ACE>(ace);
+
+          sid = reinterpret_cast<PSID>(&allowed_ace->SidStart);
+          if (!ConvertSidToStringSid(sid, &sidString)) {
+            return std::string();
+          }
+
+        } else if (ace->AceType == ACCESS_DENIED_ACE_TYPE) {
+          auto denied_ace = reinterpret_cast<PACCESS_DENIED_ACE>(ace);
+
+          sid = reinterpret_cast<PSID>(&denied_ace->SidStart);
+          if (!ConvertSidToStringSid(sid, &sidString)) {
+            return std::string();
+          }
+        }
+
+        outputACLSDDL += sidString;
+        outputACLSDDL += " = ";
+
+        DWORD nameSize = 1024, domainSize = 1024;
+        LPTSTR name = new TCHAR[nameSize]();
+        LPTSTR domain = new TCHAR[domainSize]();
+        SID_NAME_USE peUse;
+
+        while (nameSize < 1024 * 1024 && domainSize < 1024 * 1024) {
+          if (!LookupAccountSid(
+                  0, sid, name, &nameSize, domain, &domainSize, &peUse)) {
+            DWORD error = GetLastError();
+
+            if (error == 122) {
+              delete[] name;
+              delete[] domain;
+
+              name = new TCHAR[nameSize];
+              domain = new TCHAR[domainSize];
+
+            } else {
+              outputACLSDDL = std::to_string(GetLastError());
+              return outputACLSDDL;
+            }
+          } else
+            break;
+        }
+        outputACLSDDL += domain;
+        outputACLSDDL += "/";
+        outputACLSDDL += name;
+        outputACLSDDL += "\n";
+
+        delete[] name;
+        delete[] domain;
+      }
+    }
+
+    LocalFree(aclSDDLString);
+  }
+
+  return outputACLSDDL;
+}
 } // namespace osquery
