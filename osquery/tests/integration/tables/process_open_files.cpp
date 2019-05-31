@@ -19,7 +19,7 @@
 
 namespace osquery {
 
-class ProcessOpenFilesTest : public IntegrationTableTest {
+class DISABLED_ProcessOpenFilesTest : public IntegrationTableTest {
  public:
   boost::filesystem::path filepath;
 
@@ -41,7 +41,7 @@ class ProcessOpenFilesTest : public IntegrationTableTest {
   }
 };
 
-TEST_F(ProcessOpenFilesTest, test_sanity) {
+TEST_F(DISABLED_ProcessOpenFilesTest, test_sanity) {
   QueryData data = execute_query("select * from process_open_files");
   ASSERT_GT(data.size(), 0ul);
   ValidatatioMap row_map = {
