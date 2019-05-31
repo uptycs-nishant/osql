@@ -36,6 +36,12 @@ if(WIN32)
     -DOSQUERY_WINDOWS
   )
 else()
+  if(APPLE)
+    add_definitions(
+      -DOSQUERY_MACOS
+    )
+  endif()
+
   add_definitions(
     -DOSQUERY_POSIX
   )
@@ -155,6 +161,7 @@ else()
     include_directories("/usr/include")
   else()
     set(LINUX TRUE)
+    add_definitions(-DOSQUERY_LINUX)
   endif()
   set(POSIX TRUE)
 endif()
