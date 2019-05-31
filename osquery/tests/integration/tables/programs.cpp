@@ -15,9 +15,9 @@
 
 namespace osquery {
 
-class ProgramsTest : public IntegrationTableTest {};
+class DISABLED_ProgramsTest : public IntegrationTableTest {};
 
-TEST_F(ProgramsTest, test_sanity) {
+TEST_F(DISABLED_ProgramsTest, test_sanity) {
   QueryData data = execute_query("select * from programs");
   ASSERT_GT(data.size(), 0ul);
   ValidatatioMap row_map = {{"name", NonEmptyString},
