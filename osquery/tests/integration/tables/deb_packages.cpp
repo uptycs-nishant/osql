@@ -17,9 +17,9 @@
 
 namespace osquery {
 
-class DebPackages : public IntegrationTableTest {};
+class DISABLED_DebPackages : public IntegrationTableTest {};
 
-TEST_F(DebPackages, test_sanity) {
+TEST_F(DISABLED_DebPackages, test_sanity) {
   QueryData rows = execute_query("select * from deb_packages");
   if (rows.size() > 0) {
     ValidatatioMap row_map = {

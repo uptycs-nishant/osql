@@ -25,7 +25,7 @@ function vagrant_setup() {
 
 function distro_main() {
   GEM=`which gem`
-  do_sudo $GEM install --no-ri --no-rdoc -n /usr/local/bin fpm
+  do_sudo $GEM install --no-document -n /usr/local/bin fpm
 }
 
 [ "$0" = "$BASH_SOURCE" ] && vagrant_setup || true

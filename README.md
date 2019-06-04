@@ -9,16 +9,14 @@ The tools make low-level operating system analytics and monitoring both performa
 
 | Platform | Build status  | | | |
 |----------|---------------|---|---|---|
-MacOS 10.13    | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildMacOS/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildMacOS/) | | **Homepage:** | https://osquery.io
-CentOS 6.x | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildCentOS6/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildCentOS6/) | | **Downloads:** | https://osquery.io/downloads
-CentOS 7.x   | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildCentOS7/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildCentOS7/) | | **Tables:** | https://osquery.io/schema
-Ubuntu 14.04   | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildUbuntu14/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildUbuntu14/) | | **Packs:** | [https://osquery.io/packs](https://github.com/facebook/osquery/tree/master/packs)
-Ubuntu 16.04 | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildUbuntu16/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildUbuntu16/) | | **Guide:** | https://osquery.readthedocs.org
-Windows 2016 | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildWindows2016/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildWindows2016/) | | [![Slack Status](https://osquery-slack.herokuapp.com/badge.svg)](https://osquery-slack.herokuapp.com) | https://osquery-slack.herokuapp.com
-Windows 10 | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildWindows10/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildWindows10/) | | |
-FreeBSD 11 | [![Build Status](https://jenkins.osquery.io/job/osqueryMasterBuildFreeBSD11/badge/icon)](https://jenkins.osquery.io/job/osqueryMasterBuildFreeBSD11/) | | |
+MacOS 10.13  | [![Build Status](https://dev.azure.com/trailofbits/osql/_apis/build/status/osql?branchName=master&jobName=macOS1013Build)](https://dev.azure.com/trailofbits/osql/_build/latest?definitionId=4&branchName=master) | | **Homepage:** | https://osquery.io
+CentOS 6.x | [![Build Status](https://dev.azure.com/trailofbits/osql/_apis/build/status/osql?branchName=master&jobName=CentOS6Build)](https://dev.azure.com/trailofbits/osql/_build/latest?definitionId=4&branchName=master) | | **Downloads:** | https://osquery.io/downloads
+CentOS 7.x | [![Build Status](https://dev.azure.com/trailofbits/osql/_apis/build/status/osql?branchName=master&jobName=CentOS7Build)](https://dev.azure.com/trailofbits/osql/_build/latest?definitionId=4&branchName=master) | | **Tables:** | https://osquery.io/schema
+Ubuntu 16.04 | [![Build Status](https://dev.azure.com/trailofbits/osql/_apis/build/status/osql?branchName=master&jobName=Ubuntu1604Build)](https://dev.azure.com/trailofbits/osql/_build/latest?definitionId=4&branchName=master) | | **Packs:** | [https://osquery.io/packs](https://github.com/facebook/osquery/tree/master/packs)
+Windows 2016 | [![Build Status](https://dev.azure.com/trailofbits/osql/_apis/build/status/osql?branchName=master&jobName=WindowsServer2016Build)](https://dev.azure.com/trailofbits/osql/_build/latest?definitionId=4&branchName=master) | | **Guide:** | https://osquery.readthedocs.org
+Windows 10 | N/A | | [![Slack Status](https://osquery-slack.herokuapp.com/badge.svg)](https://osquery-slack.herokuapp.com) | https://osquery-slack.herokuapp.com
+FreeBSD 11 | N/A | | |
 
-There are many additional [continuous build jobs](https://jenkins.osquery.io/) that perform **dynamic** and **static** analysis, test the **package build** process, **rebuild dependencies** from source, assure **deterministic build** on macOS and Linux, **fuzz** test the virtual tables, and build on several other platforms not included above. Code safety, testing rigor, data integrity, and a friendly development community are our primary goals.
 
 ## What is osquery?
 
@@ -87,7 +85,7 @@ The list of supported platforms for **running** osquery is massive:
 Building osquery from source is encouraged! [Check out the documentation](https://osquery.readthedocs.org/en/latest/development/building/) to get started and join our developer community by giving us feedback in Github issues or submitting pull requests!
 
 We *officially* support a subset of OS versions for **building** because it is rather intense.
-- Ubuntu 14.04 and 16.04, CentOS 6.5 and 7
+- Ubuntu 16.04, CentOS 6.5 and 7
 - Apple macOS 10.13
 - Windows 10 and Server 2016
 

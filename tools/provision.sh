@@ -35,6 +35,9 @@ DARWIN_BOTTLE_SUFFIX="sierra"
 # If the world needs to be rebuilt, increase the version
 DEPS_VERSION="6"
 
+# This might not be defined in docker containers, lets use a value we can always obtain
+USER=`id -u -n`
+
 source "$SCRIPT_DIR/lib.sh"
 source "$SCRIPT_DIR/provision/lib.sh"
 

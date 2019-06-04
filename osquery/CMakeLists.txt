@@ -483,7 +483,7 @@ if(NOT SKIP_TESTS)
     add_test(NAME
               osquery_integration_tests
             COMMAND
-              osquery_tables_tests ${TEST_ARGS})
+              osquery_integration_tests ${TEST_ARGS})
   endif()
 
   # Build the example extension with the SDK.
