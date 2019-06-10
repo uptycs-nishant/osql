@@ -26,6 +26,77 @@
 
 namespace osquery {
 
+void internalTest() {
+
+unsigned long dwNumUsersRead = 0;
+  unsigned long dwTotalUsers = 0;
+  unsigned long resumeHandle = 0;
+  unsigned long ret = 0;
+  LPBYTE userBuffer = nullptr;
+
+std::cout << "78273817\n";
+
+  do {
+    //ret = NetUserEnum( L"mark-win-osq.mdomaintest.net",  //nullptr,
+    ret = NetUserEnum(L"mdomaintest.net",  //nullptr,
+      //3,
+      20,
+      0,
+      &userBuffer,
+      MAX_PREFERRED_LENGTH,
+      &dwNumUsersRead,
+      &dwTotalUsers,
+      &resumeHandle);
+
+std::cout << "ret " << ret << "\n";
+
+    if ((ret == NERR_Success || ret == ERROR_MORE_DATA) &&
+      userBuffer != nullptr) {
+      //auto iterBuff = LPUSER_INFO_3(userBuffer);
+      auto iterBuff = LPUSER_INFO_23(userBuffer);
+      std::cout << "sizeof(*iterBuff) " << sizeof(*iterBuff) << "\n";
+      /* auto iterBuff = LPUSER_INFO_20(userBuffer); */
+      for (size_t i = 0; i < dwNumUsersRead; i++) {
+
+        std::cout << 122333 << "\n";
+        //std::wcout << L"zzz : " << iterBuff->usri23_name << "\n";
+        /* std::wcout << L"zzz : " << iterBuff[i].usri23_name << "\n"; */
+
+        USER_INFO_23 str = iterBuff[i];
+        std::cout << "addr of struct - &iterBuff[i] " << &iterBuff[i] << "\n";
+        if (str.usri23_name) {
+          std::wcout << L"name : " << str.usri23_name << "\n";
+        }
+        if (str.usri23_full_name) {
+          std::wcout << L"full : " << str.usri23_full_name << "\n";
+        }
+        if (str.usri23_comment) {
+          std::wcout << L"comm : " << str.usri23_comment << "\n";
+        }
+        std::wcout << L"flags : " << str.usri23_flags << "\n";
+        if (str.usri23_user_sid) {
+          std::wcout << L"sid : " << str.usri23_user_sid << "\n";
+          std::wcout << L"QQQQQQsid : " << reinterpret_cast<LPWSTR>(str.usri23_user_sid) << "\n";
+        }
+
+        /* std::wcout << L"zzz : " << iterBuff[i].usri20_name << "\n"; */
+
+        //iterBuff++;
+      }
+    }
+    else {
+      // If there are no local users something may be amiss.
+      //LOG(WARNING) << "NetUserEnum failed with " << ret;
+    }
+    if (userBuffer != nullptr) {
+      NetApiBufferFree(userBuffer);
+    }
+
+  } while (ret == ERROR_MORE_DATA);
+
+}
+
+
 std::string psidToString(PSID sid);
 int getUidFromSid(PSID sid);
 int getGidFromSid(PSID sid);
@@ -193,6 +264,10 @@ void processLocalAccounts(std::set<std::string>& processedSids,
 QueryData genUsers(QueryContext& context) {
   QueryData results;
   std::set<std::string> processedSids;
+
+  std::cout << "hello hello! \n";
+
+  internalTest();
 
   processLocalAccounts(processedSids, results);
   processRoamingProfiles(processedSids, results);
