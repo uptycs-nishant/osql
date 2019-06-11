@@ -8,7 +8,7 @@ We recommend installing Windows via the Chocolatey package system however a help
 
 Each osquery tag (stable release) is published to **chocolatey** for our supported versions: [https://chocolatey.org/packages/osquery/](https://chocolatey.org/packages/osquery/)
 
-By default Chocolatey will install the binaries, example packs, example configuration, and an OpenSSL certificate bundle to `C:\ProgramData\osquery` and nothing more. You can pass Chocolatey the `--params='/InstallService'` flag or make use of osquery's `--install` flag with `C:\ProgramData\osquery\osqueryd\osqueryd.exe --install` to install a Windows SYSTEM level service for the **osqueryd** daemon.
+By default Chocolatey will install the binaries, example packs, example configuration, and an OpenSSL certificate bundle to `C:\Program Files\osquery` and nothing more. You can pass Chocolatey the `--params='/InstallService'` flag or make use of osquery's `--install` flag with `C:\Program Files\osquery\osqueryd\osqueryd.exe --install` to install a Windows SYSTEM level service for the **osqueryd** daemon.
 
 ### Installing osquery via the MSI package
 
@@ -29,38 +29,38 @@ The recommended way to set these ACLs is with Powershell and we've written a hel
 C:\Users\Thor\work\repos\osquery [master ≡]
 λ  . .\tools\provision\chocolatey\osquery_utils.ps1
 C:\Users\Thor\work\repos\osquery [master ≡]
-λ  Set-SafePermissions C:\ProgramData\osquery\osqueryd\
+λ  Set-SafePermissions C:\Program Files\osquery\osqueryd\
 True
 ```
 
-If you'd prefer to manually set the permissions check the `C:\ProgramData\osquery\osqueryd` directory and ensure that no users or groups have write permissions with the exception of the Administrators group or the SYSTEM account. Read and execute permissions are expected and safe so also ensure the Users group has both.
+If you'd prefer to manually set the permissions check the `C:\Program Files\osquery\osqueryd` directory and ensure that no users or groups have write permissions with the exception of the Administrators group or the SYSTEM account. Read and execute permissions are expected and safe so also ensure the Users group has both.
 
 Now that osquery is properly laid out on disk we need to create a new Windows service to launch and manage the daemon. If you're using Chocolatey you can pass the `--params='/InstallService'` flag during installation to have Chocolatey setup the Windows service for you. In general any method to install a Windows system service will suffice, one simply needs to ensure to specify the `--flagfile` option in the service binary path and give the full paths for the daemon binary and flag file both. Some examples follow:
 
 * To install the service using Powershell we bundle a helper function living in the repo at `.\tools\manage-windows-service.ps1` which can be invoked as follows:
 
 ````
-C:\ProgramData\osquery
-λ  .\manage-osqueryd.ps1 -install -startupArgs C:\ProgramData\osquery\osquery.flags
+C:\Program Files\osquery
+λ  .\manage-osqueryd.ps1 -install -startupArgs C:\Program Files\osquery\osquery.flags
 ````
 
 * If you'd rather use Powershell to manually create the service you can run:
 
 ```
 C:\Users\Thor\work\repos\osquery [master ≡]
-λ  New-Service -Name "osqueryd" -BinaryPathName "C:\ProgramData\osquery\osqueryd\osqueryd.exe --flagfile=C:\ProgramData\osquery\osquery.flags"
+λ  New-Service -Name "osqueryd" -BinaryPathName "C:\Program Files\osquery\osqueryd\osqueryd.exe --flagfile=C:\Program Files\osquery\osquery.flags"
 ```
 
 * Lastly, if you'd prefer to use the Windows service utility `sc.exe` you can use:
 
 ```
 C:\Users\Thor\work\repos\osquery [master ≡]
-λ  sc.exe create osqueryd type= own start= auto error= normal binpath= "C:\ProgramData\osquery\osqueryd\osqueryd.exe --flagfile=\ProgramData\osquery\osquery.flags" displayname= 'osqueryd'
+λ  sc.exe create osqueryd type= own start= auto error= normal binpath= "C:\Program Files\osquery\osqueryd\osqueryd.exe --flagfile=\Program Files\osquery\osquery.flags" displayname= 'osqueryd'
 ```
 
 ## Running osquery
 
-Out of the box osquery is runnable via the Chocolatey installation. More commonly however the daemon is configured to be a system service. To set this up, you'll need to install the daemon via the service installation flags as detailed in the steps above, and then provide the daemon with a config file. The simplest way to get **osqueryd** up and running is to rename the `C:\ProgramData\osquery\osquery.example.conf` file provided to `osquery.conf`. Once the configuration file is in place, you can start the Windows service:
+Out of the box osquery is runnable via the Chocolatey installation. More commonly however the daemon is configured to be a system service. To set this up, you'll need to install the daemon via the service installation flags as detailed in the steps above, and then provide the daemon with a config file. The simplest way to get **osqueryd** up and running is to rename the `C:\Program Files\osquery\osquery.example.conf` file provided to `osquery.conf`. Once the configuration file is in place, you can start the Windows service:
 * `Start-Service osqueryd` if you're using **Powershell**
 * `sc.exe start osqueryd` if you're using **cmd.exe**
 
@@ -68,7 +68,7 @@ We recommend configuring large fleets with Chef or SCCM.
 
 ## Managing the daemon service
 
-osquery provides a helper script for [managing the osquery daemon service](https://github.com/facebook/osquery/blob/master/tools/manage-osqueryd.ps1), which is installed to `C:\ProgramData\osquery\manage-osqueryd.ps1`.
+osquery provides a helper script for [managing the osquery daemon service](https://github.com/facebook/osquery/blob/master/tools/manage-osqueryd.ps1), which is installed to `C:\Program Files\osquery\manage-osqueryd.ps1`.
 
 ## Packaging osquery
 
@@ -78,10 +78,10 @@ If you'd like to create your own osquery Chocolatey package you can run [`.\tool
 
 In order to enable support for the Windows Event Log, you have to install the manifest file. To install and uninstall it manually, you can use the built-in **wevtutil** command:
 
- * **Install**: wevtutil im C:\ProgramData\osquery\osquery.man
- * **Uninstall**: wevtutil um C:\ProgramData\osquery\osquery.man
+ * **Install**: wevtutil im C:\Program Files\osquery\osquery.man
+ * **Uninstall**: wevtutil um C:\Program Files\osquery\osquery.man
 
-The same operation can be performed using the osquery manager (C:\ProgramData\osquery\manage-osqueryd.ps1):
+The same operation can be performed using the osquery manager (C:\Program Files\osquery\manage-osqueryd.ps1):
 
  * **Install**: .\manage-osqueryd.ps1 -installWelManifest
  * **Uninstall**: .\manage-osqueryd.ps1 -uninstallWelManifest
