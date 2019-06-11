@@ -213,7 +213,7 @@ $wix +=
               <ServiceInstall Id='osqueryd'
                 Name='osqueryd'
                 Account='NT AUTHORITY\SYSTEM'
-                Arguments='--flagfile=C:\ProgramData\osquery\osquery.flags'
+                Arguments='--flagfile=C:\Program Files\osquery\osquery.flags'
                 Start='auto'
                 Type='ownProcess'
                 Vital='yes'

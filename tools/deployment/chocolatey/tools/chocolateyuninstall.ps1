@@ -5,9 +5,10 @@
 #  LICENSE file in the root directory of this source tree) and the GPLv2 (found
 #  in the COPYING file in the root directory of this source tree).
 #  You may select, at your option, one of the above-listed licenses.
-$progData = [System.Environment]::GetEnvironmentVariable('ProgramData')
-$targetFolder = Join-Path $progData "osquery"
-$serviceName = 'osqueryd'
+
+#Requires -Version 3.0
+
+. "$PSScriptRoot\\osquery_utils.ps1"
 
 # Remove the osquery path from the System PATH variable. Note: Here
 # we don't make use of our local vars, as Regex requires escaping the '\'
@@ -22,7 +23,7 @@ if ((Get-Service $serviceName -ErrorAction SilentlyContinue)) {
   
   # If we find zombie processes, ensure they're termintated
   $proc = Get-Process | Where-Object { $_.ProcessName -eq 'osqueryd' }
-  if ($proc -ne $null) {
+  if ($null -ne $proc) {
     Stop-Process -Force $proc -ErrorAction SilentlyContinue
   }
 
