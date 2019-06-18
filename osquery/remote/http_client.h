@@ -264,6 +264,23 @@ class Client {
    */
   void postResponseHandler(boost_system::error_code const& ec);
 
+  /// Call back to be provided during async_resolve call.
+  void resolveHandler(const boost::system::error_code& ec,
+                      boost_asio::ip::tcp::resolver::results_type results);
+
+  /// Call back to be provided during async_connect call.
+  void connectHandler(const boost::system::error_code& ec,
+                      const boost_asio::ip::tcp::endpoint&);
+
+  /// Call back to be provided during async_handshake call.
+  void handshakeHandler(const boost::system::error_code& ec);
+
+  /// Call back to be provided during async_write call.
+  void writeHandler(boost_system::error_code const& ec, size_t);
+
+  /// Call back to be provided during async_read call.
+  void readHandler(boost_system::error_code const& ec, size_t);
+
   bool isSocketOpen() {
     return sock_.is_open();
   }
